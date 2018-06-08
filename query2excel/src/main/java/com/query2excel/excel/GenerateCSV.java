@@ -9,6 +9,9 @@ import javax.sql.rowset.CachedRowSet;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 
+import com.query2excel.jaxb.ExcelFile;
+import com.query2excel.jaxb.ExcelSheet;
+
 /** 
  * Create CSV file
 */

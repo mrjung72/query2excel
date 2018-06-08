@@ -7,6 +7,8 @@ import javax.sql.rowset.CachedRowSet;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 
+import com.query2excel.jaxb.ExcelSheet;
+
 public interface GenerateExcelInterface {
 	
 	void openExcel() throws IOException, InvalidFormatException;
