@@ -3,6 +3,8 @@ package com.query2excel.excel;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.logging.Logger;
 
 import javax.sql.rowset.CachedRowSet;
@@ -11,9 +13,14 @@ import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 
 import com.query2excel.jaxb.ExcelFile;
 import com.query2excel.jaxb.ExcelSheet;
+import com.query2excel.utils.LoggingUtils;
+import com.query2excel.utils.Utils;
+import com.query2excel.utils.ValidateProperties;
 
 /** 
  * Create CSV file
+ *  @author sahara
+ *  @since 2014.9.12
 */
 public class GenerateCSV implements GenerateExcelInterface {
 	
@@ -32,51 +39,162 @@ public class GenerateCSV implements GenerateExcelInterface {
 	
 	public GenerateCSV(ExcelFile excelFile) throws FileNotFoundException {
 		EXCEL_FILE = excelFile;
+		setInitValue();
 	}
 	
 
-	@Override
+	/**
+	 * validate property values and set init value
+	 */
+	public void setInitValue() {
+		
+		ValidateProperties validProp = new ValidateProperties(EXCEL_FILE);
+		validProp.setDefaultEncodingType();
+		validProp.validationResultFilePath();
+		validProp.setDateValueToResultFilePath();
+	}
+	
+	
+	/**
+	 * apply sheet name to result excel filename
+	 * @param resultExcelPath
+	 * @return
+	 */
+	public String applySheetName(String resultExcelPath) {
+		
+		int extPos = resultExcelPath.lastIndexOf(".");
+		
+		String fileName = resultExcelPath.substring(0, extPos);
+		String extStr = resultExcelPath.substring(extPos);
+		
+		String filePath = fileName + "_" + EXCEL_SHEET.getSheetName() + extStr;
+		
+		return filePath;
+	}
+	
+	
+	/**
+	 * 데이터 1행을 반환한다.
+	 * @param rowSet
+	 * @param meta
+	 * @return
+	 * @throws SQLException
+	 */
+	public StringBuilder getDataRow(CachedRowSet rowSet, 
+			ResultSetMetaData meta) throws SQLException {
+		StringBuilder sb = new StringBuilder();
+		
+		for (int colNum = 1; colNum < meta.getColumnCount(); colNum++) {
+			if(colNum == 1)
+				sb.append(Utils.checkNull(rowSet.getObject(colNum)));
+			else
+				sb.append(SEPERATE_DELIMETER + Utils.checkNull(rowSet.getObject(colNum)));
+		}
+		sb.append("\n");
+		
+		return sb;
+	}
+	
+	
+	/**
+	 * 타이틀 행을 반환한다.
+	 * @param meta
+	 * @return
+	 * @throws SQLException
+	 */
+	public StringBuilder getTitleRow(ResultSetMetaData meta) throws SQLException {
+		
+		StringBuilder sb = new StringBuilder();
+		
+		for (int colNum = 1; colNum < meta.getColumnCount(); colNum++) {
+			if(colNum == 1)
+				sb.append(meta.getCatalogName(colNum));
+			else
+				sb.append(SEPERATE_DELIMETER + meta.getColumnName(colNum));
+		}
+		sb.append("\n");
+		
+		return sb;
+	}
+
+
 	public void openExcel() throws IOException, InvalidFormatException {
-		// TODO Auto-generated method stub
 		
+		LoggingUtils.openExcelComment(EXCEL_FILE.getResultExcelPath());
 	}
+	
 
-	@Override
 	public void openSheet() throws FileNotFoundException {
-		// TODO Auto-generated method stub
 		
+		LoggingUtils.openExcelComment(EXCEL_FILE.getResultExcelPath());
+		setCursorToFirstRowOfExcelSheet();
+		this.RESULT_FILE_PATH = applySheetName(this.EXCEL_FILE.getResultExcelPath());
+		fos = new FileOutputStream(RESULT_FILE_PATH);
 	}
 
-	@Override
+
+	public void setCursorToFirstRowOfExcelSheet() {
+		
+		ROW_NUM = 0;
+	}
+	
+	/**
+	 * 데이터셋의 첫행으로 커서를 되돌린다.
+	 * @param selectDataSet
+	 * @throws SQLException
+	 */
+	public void setCursorToFirstRowOfResultSet(CachedRowSet selectDataSet) throws SQLException {
+		
+		selectDataSet.last();
+		log.info(String.format("\t==> %d rows selected! (Total %d rows , args)", 
+				selectDataSet.getRow(), this.ROW_NUM +
+				selectDataSet.getRow()));
+		selectDataSet.first();
+	}
+
+
 	public void closeSheet() throws IOException {
-		// TODO Auto-generated method stub
 		
+		LoggingUtils.closeSheetComment(RESULT_FILE_PATH);
+		
+		fos.flush();
+		fos.close();
 	}
 
-	@Override
 	public void closeExcel() throws IOException {
-		// TODO Auto-generated method stub
 		
+		LoggingUtils.closeExcelComment(this.EXCEL_FILE.getResultExcelPath());
 	}
+	
 
-	@Override
-	public void appendData(CachedRowSet selectDataset, boolean isWriteTitle) throws Exception {
-		// TODO Auto-generated method stub
+	public void appendData(CachedRowSet selectDataSet, boolean isWriteTitle) throws Exception {
 		
+		setCursorToFirstRowOfResultSet(selectDataSet);
+		
+		ResultSetMetaData meta = selectDataSet.getMetaData();
+		
+		if(isWriteTitle) {
+			fos.write(getTitleRow(meta).toString().getBytes( this.EXCEL_FILE.getEncodingType()));
+			ROW_NUM++;
+		}
+		
+		while(isWriteTitle) {
+			fos.write(getDataRow(selectDataSet, meta).toString().getBytes(this.EXCEL_FILE.getEncodingType()));
+			ROW_NUM++;
+		}
+		fos.flush();
 	}
+	
+	
 
-	@Override
 	public void setExcelSheet(ExcelSheet excelSheet) {   
-		// TODO Auto-generated method stub
+		this.EXCEL_SHEET = excelSheet;
 		
 	}
 
-	@Override
 	public void validateExcelFileProperties() throws FileNotFoundException {
 		 
-		ValidateExcelFileProperties validProp = new ValidateExcelFileProperties(EXCEL_FILE);
-		
-		
+//		ValidateExcelFileProperties validProp = new ValidateExcelFileProperties(EXCEL_FILE);
 	}
 
 }

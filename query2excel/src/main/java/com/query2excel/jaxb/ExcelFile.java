@@ -236,4 +236,34 @@ public class ExcelFile {
         this.nodataComment = value;
     }
 
+	public String getResultExcelPath() {
+		// TODO Auto-generated method stub
+		return fileName;
+	}
+
+	public void setResultExcelPath(Object convertDirectoryDelimeter) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public String getTempletExcelPath() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void setTempletExcelPath(Object convertDirectoryDelimeter) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public String getEncodingType() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void setEncodingType(String dEFAULT_ENCODING_TYPE) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
