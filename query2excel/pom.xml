@@ -21,6 +21,11 @@
       <name>local Repository</name>
       <url>C:\Users\sahara\.m2\repository</url>
     </repository>
+	<repository>
+		<id>oracle</id>
+		<name>ORACLE JDBC Repository</name>
+		<url>https://maven.atlassian.com/3rdparty/</url>
+	</repository>
   </repositories>
 
 
@@ -51,5 +56,10 @@
     	<artifactId>openxml4j</artifactId>
     	<version>1.0-beta</version>
     </dependency>
+	<dependency>
+		<groupId>com.oracle</groupId>
+		<artifactId>ojdbc6</artifactId>
+		<version>12.1.0.1-atlassian-hosted</version>
+	</dependency>
   </dependencies>
 </project>
