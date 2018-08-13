@@ -1,4 +1,4 @@
-package com.query2excel.utils;
+package com.query2excel.validate;
 
 import java.io.File;
 import java.util.regex.Matcher;
@@ -8,15 +8,17 @@ import org.apache.log4j.Logger;
 
 import com.query2excel.exception.Q2eFileNotFoundException;
 import com.query2excel.jaxb.ExcelFile;
+import com.query2excel.utils.LoggingUtils;
+import com.query2excel.utils.Utils;
 
-public class ValidateProperties {
+public class ValidateExcelFileProperties {
 	
 	private ExcelFile EXCEL_FILE;
 	
 	protected final String DEFAULT_ENCODING_TYPE = "UTF-8";
 	Logger log = Logger.getLogger(getClass().getName());
 	
-	public ValidateProperties(ExcelFile excelFile) {
+	public ValidateExcelFileProperties(ExcelFile excelFile) {
 		EXCEL_FILE = excelFile;
 	}
 	

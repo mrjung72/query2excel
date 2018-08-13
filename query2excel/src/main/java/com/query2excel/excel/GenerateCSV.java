@@ -15,7 +15,7 @@ import com.query2excel.jaxb.ExcelFile;
 import com.query2excel.jaxb.ExcelSheet;
 import com.query2excel.utils.LoggingUtils;
 import com.query2excel.utils.Utils;
-import com.query2excel.utils.ValidateProperties;
+import com.query2excel.validate.ValidateExcelFileProperties;
 
 /** 
  * Create CSV file
@@ -39,22 +39,18 @@ public class GenerateCSV implements GenerateExcelInterface {
 	
 	public GenerateCSV(ExcelFile excelFile) throws FileNotFoundException {
 		EXCEL_FILE = excelFile;
-		setInitValue();
 	}
 	
-
-	/**
-	 * validate property values and set init value
-	 */
-	public void setInitValue() {
+	@Override
+	public void validateExcelFileProperties() throws FileNotFoundException {
 		
-		ValidateProperties validProp = new ValidateProperties(EXCEL_FILE);
+		ValidateExcelFileProperties validProp = new ValidateExcelFileProperties(this.EXCEL_FILE);
 		validProp.setDefaultEncodingType();
 		validProp.validationResultFilePath();
-		validProp.setDateValueToResultFilePath();
+		
 	}
-	
-	
+
+
 	/**
 	 * apply sheet name to result excel filename
 	 * @param resultExcelPath
@@ -118,26 +114,32 @@ public class GenerateCSV implements GenerateExcelInterface {
 	}
 
 
+	@Override
 	public void openExcel() throws IOException, InvalidFormatException {
-		
 		LoggingUtils.openExcelComment(EXCEL_FILE.getResultExcelPath());
 	}
 	
 
+	@Override
 	public void openSheet() throws FileNotFoundException {
 		
-		LoggingUtils.openExcelComment(EXCEL_FILE.getResultExcelPath());
+		LoggingUtils.openSheetComment(EXCEL_SHEET.getSheetName());
 		setCursorToFirstRowOfExcelSheet();
 		this.RESULT_FILE_PATH = applySheetName(this.EXCEL_FILE.getResultExcelPath());
 		fos = new FileOutputStream(RESULT_FILE_PATH);
 	}
 
 
-	public void setCursorToFirstRowOfExcelSheet() {
+	@Override
+	public void closeSheet() throws IOException {
 		
-		ROW_NUM = 0;
+		LoggingUtils.closeSheetComment(this.RESULT_FILE_PATH);
+		
+		fos.flush();
+		fos.close();
 	}
-	
+
+
 	/**
 	 * 데이터셋의 첫행으로 커서를 되돌린다.
 	 * @param selectDataSet
@@ -146,27 +148,26 @@ public class GenerateCSV implements GenerateExcelInterface {
 	public void setCursorToFirstRowOfResultSet(CachedRowSet selectDataSet) throws SQLException {
 		
 		selectDataSet.last();
-		log.info(String.format("\t==> %d rows selected! (Total %d rows , args)", 
-				selectDataSet.getRow(), this.ROW_NUM +
-				selectDataSet.getRow()));
+		log.info(String.format("\t==> %d rows selected! (Total %d rows )", 
+				selectDataSet.getRow(), 
+				this.ROW_NUM + selectDataSet.getRow()));
 		selectDataSet.first();
 	}
 
 
-	public void closeSheet() throws IOException {
-		
-		LoggingUtils.closeSheetComment(RESULT_FILE_PATH);
-		
-		fos.flush();
-		fos.close();
+	public void setCursorToFirstRowOfExcelSheet() {
+		ROW_NUM = 0;
 	}
+	
 
+	@Override
 	public void closeExcel() throws IOException {
 		
 		LoggingUtils.closeExcelComment(this.EXCEL_FILE.getResultExcelPath());
 	}
 	
 
+	@Override
 	public void appendData(CachedRowSet selectDataSet, boolean isWriteTitle) throws Exception {
 		
 		setCursorToFirstRowOfResultSet(selectDataSet);
@@ -178,7 +179,7 @@ public class GenerateCSV implements GenerateExcelInterface {
 			ROW_NUM++;
 		}
 		
-		while(isWriteTitle) {
+		while(selectDataSet.next()) {
 			fos.write(getDataRow(selectDataSet, meta).toString().getBytes(this.EXCEL_FILE.getEncodingType()));
 			ROW_NUM++;
 		}
@@ -192,9 +193,5 @@ public class GenerateCSV implements GenerateExcelInterface {
 		
 	}
 
-	public void validateExcelFileProperties() throws FileNotFoundException {
-		 
-//		ValidateExcelFileProperties validProp = new ValidateExcelFileProperties(EXCEL_FILE);
-	}
 
 }
